@@ -8,7 +8,45 @@ html, body {
   font-family: 'Roboto', sans-serif;
 }
 
+textarea {
+  border-style: none;
+  background-color: darkgray;
+  color: white;
+  width: 100%;
+  font-size: 20px;
+  overflow: hidden;
+}
+
+button {
+  width: 50px;
+  height: 50px;
+  border-style: none;
+  border-radius: 50%;
+  color: white;
+}
+
+#container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
 #output {
   padding: 20px;
   text-align: center;
+}
+
+#play {
+  background-color: green;
+}
+
+#stop {
+  background-color: red;
+}
+
+.buttons-row {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-evenly;
 }

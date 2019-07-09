@@ -6,19 +6,14 @@ class Brainfuck {
   List<int> bracketStack;
   List<String> input;
   List<String> output;
+  bool debug;
 
-  Brainfuck(String code) {
-    this.code = code.trim().replaceAll(' ', "").replaceAll(RegExp(r'/(\r\n|\n|\r)/gm'), "").split("");
-    this.input = [];
-    this.pointer = 0;
-    this.codePointer = 0;
-    this.dataset = [];
-    this.bracketStack = [];
-    this.output = [];
+  Brainfuck([bool debug = false]) {
+    _reset();
+    this.debug = debug;
   }
 
-  operation(str) {
-
+  void operation(str) {
     switch (str) {
       case '+': {
         try {
@@ -27,6 +22,10 @@ class Brainfuck {
           this.dataset.add(0);
         }
         ++this.dataset[this.pointer];
+
+        if (this.debug) {
+          print('Incrementing > ${this.dataset[this.pointer]} at ${this.pointer}');
+        }
         break;
       }
 
@@ -37,21 +36,37 @@ class Brainfuck {
           this.dataset.add(0);
         }
         --this.dataset[this.pointer];
+
+        if (this.debug) {
+          print('Decrementing > ${this.dataset[this.pointer]} at ${this.pointer}');
+        }
         break;
       }
 
       case '<': {
         this.pointer = --this.pointer < 0 ? 0 : this.pointer;
+
+        if (this.debug) {
+          print('Going left to ${this.pointer}');
+        }
         break;
       }
 
       case '>': {
         this.pointer++;
+
+        if (this.debug) {
+          print('Going right to ${this.pointer}');
+        }
         break;
       }
 
       case '.': {
         this.output.add(String.fromCharCode(this.dataset[this.pointer]));
+
+        if (this.debug) {
+          print('Printing ${this.dataset[this.pointer]} at ${this.pointer}');
+        }
         break;
       }
 
@@ -63,12 +78,24 @@ class Brainfuck {
 
       case '[': {
         this.leftBracket();
+
+        if (this.debug) {
+          print('Starting a loop');
+        }
         break;
       }
 
       case ']': {
         this.rightBracket();
+
+        if (this.debug) {
+          print('Ending a loop');
+        }
         break;
+      }
+
+      default: {
+        throw Exception('Invalid character');
       }
     }
 
@@ -76,7 +103,7 @@ class Brainfuck {
 
   void leftBracket() {
     int openBrackets = 1;
-    if (this.dataset[this.pointer] != null) {
+    if (this.dataset[this.pointer] != null && this.dataset[this.pointer] > 0) {
       this.bracketStack.add(this.codePointer);
     } else {
       while (openBrackets > 0 && this.code[++this.codePointer] != null) {
@@ -93,19 +120,35 @@ class Brainfuck {
     this.codePointer = this.bracketStack.removeLast() - 1;
   }
 
-  List<String> run() {
+  String run(String code) {
+    this.code = code
+      .replaceAll(RegExp(r"[\dA-Za-z\r\n/# '()\\]"), "")
+      .trim()
+      .split("");
     List<String> list = ['+', '-', '<', '>', '.', ',', '[', ']'];
     do {
       String c = this.code[this.codePointer];
       if (list.contains(c)) {
+        if (this.debug) {
+          print('Operation: $c');
+        }
         this.operation(c);
       }
     } while (++this.codePointer < this.code.length);
-    return this.output;
+
+    String result = this.output.join('');
+    _reset();
+    return result;
   }
 
-  toString() {
-    return this.run().join('');
+  void _reset() {
+    this.code = [];
+    this.input = [];
+    this.pointer = 0;
+    this.codePointer = 0;
+    this.dataset = [];
+    this.bracketStack = [];
+    this.output = [];
   }
 
 }
