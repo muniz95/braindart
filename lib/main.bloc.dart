@@ -33,9 +33,9 @@ class MainBloc {
         } catch (e) {
           this.tape.add(0);
         }
-        await Future.delayed(Duration(milliseconds: 500));
         _tape.sink.add(this.tape);
         _position.sink.add(this.position);
+        await Future.delayed(Duration(milliseconds: 100));
         ++this.tape[this.position];
 
         if (this.debug) {
@@ -50,7 +50,7 @@ class MainBloc {
         } catch (e) {
           this.tape.add(0);
         }
-        await Future.delayed(Duration(milliseconds: 500));
+        await Future.delayed(Duration(milliseconds: 100));
         _tape.sink.add(this.tape);
         _position.sink.add(this.position);
         --this.tape[this.position];
