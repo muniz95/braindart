@@ -72,3 +72,9 @@ button::after {
   align-items: center;
   justify-content: center;
 }
+
+.active {
+  color: white;
+  background-color: green;
+  border-color: black;
+}

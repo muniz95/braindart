@@ -26,4 +26,32 @@ void init() {
   bloc.composingOutput.listen((List<String> output) {
     outputDiv.text = output.join('');
   });
+  bloc.tapeStream.listen((List<int> tape) {
+    document.getElementById('tape')?.remove();
+    _buildTape(tape);
+  });
+  bloc.positionStream.listen((int position) {
+    document
+      .getElementById('tape')
+      .children[position]
+      .classes.add('active');
+  });
+}
+
+void _buildTape(List<int> tape) {
+  DivElement tapeDiv = DivElement()
+    ..id = 'tape'
+    ;
+  tape.forEach((int value) {
+    tapeDiv.append(_buildCell(value));
+  });
+  document.body.append(tapeDiv);
+}
+
+DivElement _buildCell(int value) {
+  DivElement cell = DivElement()
+    ..innerText = value.toString()
+    ..classes = ['cell']
+    ;
+  return cell;
 }
