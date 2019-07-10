@@ -25,11 +25,16 @@ button {
   color: white;
 }
 
+button::after {
+  border: none;
+}
+
 #container {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  margin-top: 40px;
 }
 
 #output {
@@ -45,8 +50,22 @@ button {
   background-color: red;
 }
 
+#tape {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  margin-left: 20px;
+}
+
 .buttons-row {
-  margin-top: 10px;
+  flex-direction: column;
+  margin-left: 10px;
   display: flex;
   justify-content: space-evenly;
+}
+
+.cell {
+  width: 30px;
+  height: 40px;
+  border-style: solid;
 }
