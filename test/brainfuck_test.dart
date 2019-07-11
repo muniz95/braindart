@@ -9,15 +9,15 @@ void main() {
   group("BF Interpreter", () {
 
     test("can print 0", () async {
-      expect(await MainBloc().run(BF_CODE_THAT_PRINTS_ZERO), "0");
+      expect(await MainBloc(delay: 1).run(BF_CODE_THAT_PRINTS_ZERO), "0");
     });
 
     test("can print a string with a loop", () async {
-      expect(await MainBloc().run(BF_CODE_WITH_A_LOOP), "000");
+      expect(await MainBloc(delay: 1).run(BF_CODE_WITH_A_LOOP), "000");
     });
 
     test("can print Hello World", () async {
-      expect(await MainBloc().run(BF_HELLO_WORLD), "Hello World!");
+      expect(await MainBloc(delay: 1).run(BF_HELLO_WORLD), "Hello World!");
     });
   });
 }
