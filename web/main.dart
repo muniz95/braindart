@@ -27,14 +27,13 @@ void init() {
     outputDiv.text = output.join('');
   });
   bloc.tapeStream.listen((List<int> tape) {
+    print(tape);
     document.getElementById('tape')?.remove();
     _buildTape(tape);
   });
   bloc.positionStream.listen((int position) {
-    document
-      .getElementById('tape')
-      .children[position]
-      .classes.add('active');
+    document.getElementById('tape')?.remove();
+    _buildTape(bloc.tape);
   });
 }
 
@@ -42,16 +41,20 @@ void _buildTape(List<int> tape) {
   DivElement tapeDiv = DivElement()
     ..id = 'tape'
     ;
-  tape.forEach((int value) {
-    tapeDiv.append(_buildCell(value));
+  tape.asMap().forEach((int index, int value) {
+    tapeDiv.append(_buildCell(value, index == bloc.position));
   });
   document.body.append(tapeDiv);
 }
 
-DivElement _buildCell(int value) {
+DivElement _buildCell(int value, bool isActive) {
+  List<String> classes = ['cell'];
+  if (isActive) {
+    classes.add('active');
+  }
   DivElement cell = DivElement()
     ..innerText = value.toString()
-    ..classes = ['cell']
+    ..classes = classes
     ;
   return cell;
 }
