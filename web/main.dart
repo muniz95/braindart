@@ -27,7 +27,6 @@ void init() {
     outputDiv.text = output.join('');
   });
   bloc.tapeStream.listen((List<int> tape) {
-    print(tape);
     document.getElementById('tape')?.remove();
     _buildTape(tape);
   });
