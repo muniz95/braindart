@@ -12,6 +12,7 @@ void main() {
   init();
 
   playButton.addEventListener('click', (Event e) {
+    outputDiv.text = '';
     bloc.run(codeTextarea.value);
   });
 }
