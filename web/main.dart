@@ -37,9 +37,7 @@ void init() {
 }
 
 void _buildTape(List<int> tape) {
-  DivElement tapeDiv = DivElement()
-    ..id = 'tape'
-    ;
+  var tapeDiv = DivElement()..id = 'tape';
   tape.asMap().forEach((int index, int value) {
     tapeDiv.append(_buildCell(value, index == bloc.position));
   });
@@ -47,13 +45,12 @@ void _buildTape(List<int> tape) {
 }
 
 DivElement _buildCell(int value, bool isActive) {
-  List<String> classes = ['cell'];
+  var classes = <String>['cell'];
   if (isActive) {
     classes.add('active');
   }
-  DivElement cell = DivElement()
+  var cell = DivElement()
     ..innerText = value.toString()
-    ..classes = classes
-    ;
+    ..classes = classes;
   return cell;
 }

@@ -22,139 +22,147 @@ class MainBloc {
     _reset();
     this.debug = debug;
     this.delay = delay;
-    this._position = BehaviorSubject<int>.seeded(0);
-    this._tape = BehaviorSubject<List<int>>.seeded([0]);
-    this._output = BehaviorSubject<List<String>>.seeded([]);
+    _position = BehaviorSubject<int>.seeded(0);
+    _tape = BehaviorSubject<List<int>>.seeded([0]);
+    _output = BehaviorSubject<List<String>>.seeded([]);
   }
 
   Future operation(str) async {
     switch (str) {
-      case '+': {
-        await add();
-        break;
-      }
-
-      case '-': {
-        await subtract();
-        break;
-      }
-
-      case '<': {
-        await shiftLeft();
-        break;
-      }
-
-      case '>': {
-        await shiftRight();
-        break;
-      }
-
-      case '.': {
-        await printValue();
-        break;
-      }
-
-      case ',': {
-        String c = this.input.removeAt(0);
-        this.tape[this.position] = c.codeUnitAt(0);
-        break;
-      }
-
-      case '[': {
-        this.leftBracket();
-
-        if (this.debug) {
-          print('Starting a loop');
+      case '+':
+        {
+          await add();
+          break;
         }
-        break;
-      }
 
-      case ']': {
-        this.rightBracket();
-
-        if (this.debug) {
-          print('Ending a loop');
+      case '-':
+        {
+          await subtract();
+          break;
         }
-        break;
-      }
 
-      default: {
-        throw Exception('Invalid character');
-      }
+      case '<':
+        {
+          await shiftLeft();
+          break;
+        }
+
+      case '>':
+        {
+          await shiftRight();
+          break;
+        }
+
+      case '.':
+        {
+          await printValue();
+          break;
+        }
+
+      case ',':
+        {
+          var c = input.removeAt(0);
+          tape[position] = c.codeUnitAt(0);
+          break;
+        }
+
+      case '[':
+        {
+          leftBracket();
+
+          if (debug) {
+            print('Starting a loop');
+          }
+          break;
+        }
+
+      case ']':
+        {
+          rightBracket();
+
+          if (debug) {
+            print('Ending a loop');
+          }
+          break;
+        }
+
+      default:
+        {
+          throw Exception('Invalid character');
+        }
     }
-
   }
 
   Future add() async {
     try {
-      this.tape[this.position] = this.tape[this.position];
+      tape[position] = tape[position];
     } catch (e) {
-      this.tape.add(0);
+      tape.add(0);
     }
-    ++this.tape[this.position];
-    _tape.sink.add(this.tape);
+    ++tape[position];
+    _tape.sink.add(tape);
     await Future.delayed(Duration(milliseconds: delay));
 
-    if (this.debug) {
-      print('Incrementing > ${this.tape[this.position]} at ${this.position}');
+    if (debug) {
+      print('Incrementing > ${tape[position]} at $position');
     }
   }
 
   Future subtract() async {
     try {
-      this.tape[this.position] = this.tape[this.position];
+      tape[position] = tape[position];
     } catch (e) {
-      this.tape.add(0);
+      tape.add(0);
     }
     await Future.delayed(Duration(milliseconds: delay));
-    _tape.sink.add(this.tape);
-    --this.tape[this.position];
+    _tape.sink.add(tape);
+    --tape[position];
 
-    if (this.debug) {
-      print('Decrementing > ${this.tape[this.position]} at ${this.position}');
+    if (debug) {
+      print('Decrementing > ${tape[position]} at $position');
     }
   }
 
   Future shiftLeft() async {
-    this.position = --this.position < 0 ? 0 : this.position;
+    position = --position < 0 ? 0 : position;
 
     await Future.delayed(Duration(milliseconds: delay));
-    _position.sink.add(this.position);
-    if (this.debug) {
-      print('Going left to ${this.position}');
+    _position.sink.add(position);
+    if (debug) {
+      print('Going left to $position');
     }
   }
 
   Future shiftRight() async {
-    this.position++;
+    position++;
 
-    if (this.tape.length > this.position) {
+    if (tape.length > position) {
       await Future.delayed(Duration(milliseconds: delay));
-      _position.sink.add(this.position);
+      _position.sink.add(position);
     }
-    if (this.debug) {
-      print('Going right to ${this.position}');
+    if (debug) {
+      print('Going right to $position');
     }
   }
 
   Future printValue() async {
-    this.output.add(String.fromCharCode(this.tape[this.position]));
-    this._output.sink.add(this.output);
+    output.add(String.fromCharCode(tape[position]));
+    _output.sink.add(output);
 
-    if (this.debug) {
-      print('Printing ${this.tape[this.position]} at ${this.position}');
+    if (debug) {
+      print('Printing ${tape[position]} at $position');
     }
   }
 
   void leftBracket() {
-    int openBrackets = 1;
-    if (this.tape[this.position] != null && this.tape[this.position] > 0) {
-      this.bracketStack.add(this.codePointer);
+    var openBrackets = 1;
+    if (tape[position] != null && tape[position] > 0) {
+      bracketStack.add(codePointer);
     } else {
-      while (openBrackets > 0 && this.code[++this.codePointer] != null) {
-        if (this.code[this.codePointer] == ']') {
+      while (openBrackets > 0 && code[++codePointer] != null) {
+        if (code[codePointer] == ']') {
           openBrackets--;
-        } else if (this.code[this.codePointer] == '[') {
+        } else if (code[codePointer] == '[') {
           openBrackets++;
         }
       }
@@ -162,38 +170,36 @@ class MainBloc {
   }
 
   void rightBracket() {
-    this.codePointer = this.bracketStack.removeLast() - 1;
+    codePointer = bracketStack.removeLast() - 1;
   }
 
   Future<String> run(String code) async {
-    this.code = code
-      .replaceAll(RegExp(r"[\dA-Za-z\r\n/# '()\\]"), "")
-      .trim()
-      .split("");
-    List<String> list = ['+', '-', '<', '>', '.', ',', '[', ']'];
+    this.code =
+        code.replaceAll(RegExp(r"[\dA-Za-z\r\n/# '()\\]"), '').trim().split('');
+    var list = <String>['+', '-', '<', '>', '.', ',', '[', ']'];
     do {
-      String c = this.code[this.codePointer];
+      var c = this.code[codePointer];
       if (list.contains(c)) {
-        if (this.debug) {
+        if (debug) {
           print('Operation: $c');
         }
-        await this.operation(c);
+        await operation(c);
       }
-    } while (++this.codePointer < this.code.length);
+    } while (++codePointer < this.code.length);
 
-    String result = this.output.join('');
+    var result = output.join('');
     _reset();
     return result;
   }
 
   void _reset() {
-    this.code = [];
-    this.input = [];
-    this.position = 0;
-    this.codePointer = 0;
-    this.tape = [];
-    this.bracketStack = [];
-    this.output = [];
+    code = [];
+    input = [];
+    position = 0;
+    codePointer = 0;
+    tape = [];
+    bracketStack = [];
+    output = [];
   }
 }
 
