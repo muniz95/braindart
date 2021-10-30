@@ -12,19 +12,25 @@ class MainBloc {
   List<String> output;
   BehaviorSubject<List<String>> _output;
   bool debug;
-  int delay;
+  BehaviorSubject<double> delay;
 
   Stream<int> get positionStream => _position.stream;
   Stream<List<int>> get tapeStream => _tape.stream;
   Stream<List<String>> get composingOutput => _output.stream;
 
-  MainBloc({bool debug = false, int delay = 100}) {
+  MainBloc({bool debug = false, double delay = 100}) {
     _reset();
     this.debug = debug;
-    this.delay = delay;
+    this.delay = BehaviorSubject<double>.seeded(delay);
     _position = BehaviorSubject<int>.seeded(0);
     _tape = BehaviorSubject<List<int>>.seeded([0]);
     _output = BehaviorSubject<List<String>>.seeded([]);
+
+    if (debug) {
+      this.delay.listen((event) {
+        print(event);
+      });
+    }
   }
 
   Future operation(str) async {
@@ -101,7 +107,7 @@ class MainBloc {
     }
     ++tape[position];
     _tape.sink.add(tape);
-    await Future.delayed(Duration(milliseconds: delay));
+    await Future.delayed(Duration(milliseconds: delay.value.toInt()));
 
     if (debug) {
       print('Incrementing > ${tape[position]} at $position');
@@ -114,7 +120,7 @@ class MainBloc {
     } catch (e) {
       tape.add(0);
     }
-    await Future.delayed(Duration(milliseconds: delay));
+    await Future.delayed(Duration(milliseconds: delay.value.toInt()));
     _tape.sink.add(tape);
     --tape[position];
 
@@ -126,7 +132,7 @@ class MainBloc {
   Future shiftLeft() async {
     position = --position < 0 ? 0 : position;
 
-    await Future.delayed(Duration(milliseconds: delay));
+    await Future.delayed(Duration(milliseconds: delay.value.toInt()));
     _position.sink.add(position);
     if (debug) {
       print('Going left to $position');
@@ -137,7 +143,7 @@ class MainBloc {
     position++;
 
     if (tape.length > position) {
-      await Future.delayed(Duration(milliseconds: delay));
+      await Future.delayed(Duration(milliseconds: delay.value.toInt()));
       _position.sink.add(position);
     }
     if (debug) {
