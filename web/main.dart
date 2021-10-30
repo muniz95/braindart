@@ -2,9 +2,12 @@ import 'dart:html';
 
 import 'package:brainfuck/main.bloc.dart';
 
+double SPEED_RATIO = 100000;
+
 TextAreaElement codeTextarea;
 ButtonElement playButton;
 ButtonElement stopButton;
+InputElement speedSlider;
 DivElement outputDiv;
 MainBloc bloc;
 
@@ -15,6 +18,10 @@ void main() {
     outputDiv.text = '';
     bloc.run(codeTextarea.value);
   });
+  speedSlider.addEventListener('change', (Event event) {
+    var speed = SPEED_RATIO / int.parse((event.target as InputElement).value);
+    bloc.delay.sink.add(speed);
+  });
 }
 
 void init() {
@@ -22,6 +29,7 @@ void init() {
   codeTextarea = querySelector('#code');
   playButton = querySelector('#play');
   stopButton = querySelector('#stop');
+  speedSlider = querySelector('#speed');
   outputDiv = querySelector('#output');
   codeTextarea.value = BF_HELLO_WORLD;
   bloc.composingOutput.listen((List<String> output) {
