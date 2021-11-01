@@ -22,6 +22,9 @@ void main() {
     var speed = SPEED_RATIO / int.parse((event.target as InputElement).value);
     bloc.delay.sink.add(speed);
   });
+  stopButton.addEventListener('click', (event) {
+    bloc.stop();
+  });
 }
 
 void init() {
