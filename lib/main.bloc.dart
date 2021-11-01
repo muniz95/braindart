@@ -13,18 +13,21 @@ class MainBloc {
   BehaviorSubject<List<String>> _output;
   bool debug;
   BehaviorSubject<double> delay;
+  BehaviorSubject<bool> _isStopped;
 
   Stream<int> get positionStream => _position.stream;
   Stream<List<int>> get tapeStream => _tape.stream;
   Stream<List<String>> get composingOutput => _output.stream;
+  Stream<bool> get isStopped => _isStopped.stream;
 
   MainBloc({bool debug = false, double delay = 100}) {
-    _reset();
     this.debug = debug;
     this.delay = BehaviorSubject<double>.seeded(delay);
+    _isStopped = BehaviorSubject<bool>.seeded(false);
     _position = BehaviorSubject<int>.seeded(0);
     _tape = BehaviorSubject<List<int>>.seeded([0]);
     _output = BehaviorSubject<List<String>>.seeded([]);
+    _reset();
 
     if (debug) {
       this.delay.listen((event) {
@@ -180,6 +183,7 @@ class MainBloc {
   }
 
   Future<String> run(String code) async {
+    _reset();
     this.code =
         code.replaceAll(RegExp(r"[\dA-Za-z\r\n/# '()\\]"), '').trim().split('');
     var list = <String>['+', '-', '<', '>', '.', ',', '[', ']'];
@@ -191,11 +195,17 @@ class MainBloc {
         }
         await operation(c);
       }
-    } while (++codePointer < this.code.length);
+    } while (++codePointer < this.code.length && !_isStopped.value);
 
     var result = output.join('');
-    _reset();
+    if (!_isStopped.value) {
+      _reset();
+    }
     return result;
+  }
+
+  void stop() {
+    _isStopped.add(true);
   }
 
   void _reset() {
@@ -206,6 +216,7 @@ class MainBloc {
     tape = [];
     bracketStack = [];
     output = [];
+    _isStopped.add(false);
   }
 }
 
