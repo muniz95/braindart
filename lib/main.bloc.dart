@@ -1,26 +1,26 @@
 import 'package:rxdart/rxdart.dart';
 
 class MainBloc {
-  List<String> code;
-  int position;
-  BehaviorSubject<int> _position;
-  int codePointer;
-  List<int> tape;
-  BehaviorSubject<List<int>> _tape;
-  List<int> bracketStack;
-  List<String> input;
-  List<String> output;
-  BehaviorSubject<List<String>> _output;
-  bool debug;
-  BehaviorSubject<double> delay;
-  BehaviorSubject<bool> _isStopped;
+  late List<String> code;
+  late int position;
+  late int codePointer;
+  late List<int> tape;
+  late List<int> bracketStack;
+  late List<String> input;
+  late List<String> output;
+  late bool debug;
+  late BehaviorSubject<int> _position;
+  late BehaviorSubject<List<int>> _tape;
+  late BehaviorSubject<List<String>> _output;
+  late BehaviorSubject<double> delay;
+  late BehaviorSubject<bool> _isStopped;
 
   Stream<int> get positionStream => _position.stream;
   Stream<List<int>> get tapeStream => _tape.stream;
   Stream<List<String>> get composingOutput => _output.stream;
   Stream<bool> get isStopped => _isStopped.stream;
 
-  MainBloc({bool debug = false, double delay = 100}) {
+  MainBloc({bool debug = true, double delay = 100}) {
     this.debug = debug;
     this.delay = BehaviorSubject<double>.seeded(delay);
     _isStopped = BehaviorSubject<bool>.seeded(false);
@@ -165,10 +165,10 @@ class MainBloc {
 
   void leftBracket() {
     var openBrackets = 1;
-    if (tape[position] != null && tape[position] > 0) {
+    if (tape[position] > 0) {
       bracketStack.add(codePointer);
     } else {
-      while (openBrackets > 0 && code[++codePointer] != null) {
+      while (openBrackets > 0) {
         if (code[codePointer] == ']') {
           openBrackets--;
         } else if (code[codePointer] == '[') {
