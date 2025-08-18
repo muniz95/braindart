@@ -86,8 +86,13 @@ class MainBloc {
 
       case ',':
         {
-          var c = input.removeAt(0);
-          tape[position] = c.codeUnitAt(0);
+          if (input.isNotEmpty) {
+            var c = input.removeAt(0);
+            tape[position] = c.codeUnitAt(0);
+          } else {
+            _logger.warning('Attempted to read input but none available');
+            tape[position] = 0; // Set to 0 or another default value
+          }
           break;
         }
 
@@ -120,11 +125,11 @@ class MainBloc {
   }
 
   Future<void> add() async {
-    try {
-      tape[position] = tape[position];
-    } catch (e) {
+    // Ensure the tape has enough cells
+    while (tape.length <= position) {
       tape.add(0);
     }
+    
     ++tape[position];
     _tape.sink.add(tape);
     await Future.delayed(Duration(milliseconds: delay.value.toInt()));
@@ -136,13 +141,16 @@ class MainBloc {
 
   Future<void> subtract() async {
     try {
-      tape[position] = tape[position];
+      --tape[position];
     } catch (e) {
-      tape.add(0);
+      // Extend the tape if position is out of bounds
+      while (tape.length <= position) {
+        tape.add(0);
+      }
+      tape[position] = -1; // -1 since we're subtracting from 0
     }
     await Future.delayed(Duration(milliseconds: delay.value.toInt()));
     _tape.sink.add(tape);
-    --tape[position];
 
     if (debug) {
       _logger.fine('Decrementing > ${tape[position]} at $position');
@@ -162,10 +170,15 @@ class MainBloc {
   Future<void> shiftRight() async {
     position++;
 
-    if (tape.length > position) {
-      await Future.delayed(Duration(milliseconds: delay.value.toInt()));
-      _position.sink.add(position);
+    // Extend the tape if necessary
+    if (tape.length <= position) {
+      tape.add(0);
+      _tape.sink.add(tape);
     }
+    
+    await Future.delayed(Duration(milliseconds: delay.value.toInt()));
+    _position.sink.add(position);
+    
     if (debug) {
       _logger.fine('Going right to $position');
     }
@@ -187,7 +200,7 @@ class MainBloc {
       _logger.fine('Adding bracket at position $codePointer to stack');
     } else {
       _logger.fine('Skipping loop at position $codePointer');
-      while (openBrackets > 0) {
+      while (openBrackets > 0 && ++codePointer < code.length) {
         if (code[codePointer] == ']') {
           openBrackets--;
         } else if (code[codePointer] == '[') {
@@ -198,6 +211,10 @@ class MainBloc {
   }
 
   void rightBracket() {
+    if (bracketStack.isEmpty) {
+      _logger.warning('Unmatched closing bracket at position $codePointer');
+      return; // Skip this bracket if there's no matching opening bracket
+    }
     codePointer = bracketStack.removeLast() - 1;
     _logger.fine('Jumping back to position ${codePointer + 1}');
   }
@@ -207,6 +224,13 @@ class MainBloc {
     _reset();
     this.code =
         code.replaceAll(RegExp(r"[\dA-Za-z\r\n/# '()\\]"), '').trim().split('');
+    
+    // Check if code is empty after filtering
+    if (this.code.isEmpty) {
+      _logger.warning('No valid BrainF code to run');
+      return '';
+    }
+    
     var list = <String>['+', '-', '<', '>', '.', ',', '[', ']'];
     do {
       var c = this.code[codePointer];
@@ -238,10 +262,12 @@ class MainBloc {
     input = [];
     position = 0;
     codePointer = 0;
-    tape = [];
+    tape = [0];  // Initialize with a 0 to match constructor
     bracketStack = [];
     output = [];
     _isStopped.add(false);
+    _tape.sink.add(tape);  // Update the tape subject
+    _position.sink.add(position);  // Update the position subject
     _logger.fine('Reset all variables to initial state');
   }
 
