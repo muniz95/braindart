@@ -1,4 +1,5 @@
 import 'package:rxdart/rxdart.dart';
+import 'package:logging/logging.dart';
 
 class MainBloc {
   late List<String> code;
@@ -8,21 +9,36 @@ class MainBloc {
   late List<int> bracketStack;
   late List<String> input;
   late List<String> output;
-  late bool debug;
-  late BehaviorSubject<int> _position;
-  late BehaviorSubject<List<int>> _tape;
-  late BehaviorSubject<List<String>> _output;
-  late BehaviorSubject<double> delay;
-  late BehaviorSubject<bool> _isStopped;
+  final bool debug;
+  
+  // Create a logger for this class
+  final Logger _logger = Logger('MainBloc');
 
+  // Use late final for subjects
+  late final BehaviorSubject<int> _position;
+  late final BehaviorSubject<List<int>> _tape;
+  late final BehaviorSubject<List<String>> _output;
+  late final BehaviorSubject<double> delay;
+  late final BehaviorSubject<bool> _isStopped;
+
+  // Stream getters
   Stream<int> get positionStream => _position.stream;
   Stream<List<int>> get tapeStream => _tape.stream;
   Stream<List<String>> get composingOutput => _output.stream;
   Stream<bool> get isStopped => _isStopped.stream;
 
-  MainBloc({bool debug = true, double delay = 100}) {
-    this.debug = debug;
-    this.delay = BehaviorSubject<double>.seeded(delay);
+  MainBloc({this.debug = true, double delayValue = 100}) {
+    // Initialize logging
+    Logger.root.level = debug ? Level.ALL : Level.INFO;
+    Logger.root.onRecord.listen((record) {
+      // We'll use print here as the lowest level output mechanism
+      // In a real app, you might use a more sophisticated approach
+      if (debug || record.level >= Level.INFO) {
+        print('${record.level.name}: ${record.time}: ${record.message}');
+      }
+    });
+
+    delay = BehaviorSubject<double>.seeded(delayValue);
     _isStopped = BehaviorSubject<bool>.seeded(false);
     _position = BehaviorSubject<int>.seeded(0);
     _tape = BehaviorSubject<List<int>>.seeded([0]);
@@ -30,13 +46,13 @@ class MainBloc {
     _reset();
 
     if (debug) {
-      this.delay.listen((event) {
-        print(event);
+      delay.listen((event) {
+        _logger.fine('Delay changed to: $event');
       });
     }
   }
 
-  Future operation(str) async {
+  Future<void> operation(String str) async {
     switch (str) {
       case '+':
         {
@@ -70,8 +86,13 @@ class MainBloc {
 
       case ',':
         {
-          var c = input.removeAt(0);
-          tape[position] = c.codeUnitAt(0);
+          if (input.isNotEmpty) {
+            var c = input.removeAt(0);
+            tape[position] = c.codeUnitAt(0);
+          } else {
+            _logger.warning('Attempted to read input but none available');
+            tape[position] = 0; // Set to 0 or another default value
+          }
           break;
         }
 
@@ -80,7 +101,7 @@ class MainBloc {
           leftBracket();
 
           if (debug) {
-            print('Starting a loop');
+            _logger.fine('Starting a loop');
           }
           break;
         }
@@ -90,76 +111,85 @@ class MainBloc {
           rightBracket();
 
           if (debug) {
-            print('Ending a loop');
+            _logger.fine('Ending a loop');
           }
           break;
         }
 
       default:
         {
-          throw Exception('Invalid character');
+          _logger.severe('Invalid character: $str');
+          throw Exception('Invalid character: $str');
         }
     }
   }
 
-  Future add() async {
-    try {
-      tape[position] = tape[position];
-    } catch (e) {
+  Future<void> add() async {
+    // Ensure the tape has enough cells
+    while (tape.length <= position) {
       tape.add(0);
     }
+    
     ++tape[position];
     _tape.sink.add(tape);
     await Future.delayed(Duration(milliseconds: delay.value.toInt()));
 
     if (debug) {
-      print('Incrementing > ${tape[position]} at $position');
+      _logger.fine('Incrementing > ${tape[position]} at $position');
     }
   }
 
-  Future subtract() async {
+  Future<void> subtract() async {
     try {
-      tape[position] = tape[position];
+      --tape[position];
     } catch (e) {
-      tape.add(0);
+      // Extend the tape if position is out of bounds
+      while (tape.length <= position) {
+        tape.add(0);
+      }
+      tape[position] = -1; // -1 since we're subtracting from 0
     }
     await Future.delayed(Duration(milliseconds: delay.value.toInt()));
     _tape.sink.add(tape);
-    --tape[position];
 
     if (debug) {
-      print('Decrementing > ${tape[position]} at $position');
+      _logger.fine('Decrementing > ${tape[position]} at $position');
     }
   }
 
-  Future shiftLeft() async {
+  Future<void> shiftLeft() async {
     position = --position < 0 ? 0 : position;
 
     await Future.delayed(Duration(milliseconds: delay.value.toInt()));
     _position.sink.add(position);
     if (debug) {
-      print('Going left to $position');
+      _logger.fine('Going left to $position');
     }
   }
 
-  Future shiftRight() async {
+  Future<void> shiftRight() async {
     position++;
 
-    if (tape.length > position) {
-      await Future.delayed(Duration(milliseconds: delay.value.toInt()));
-      _position.sink.add(position);
+    // Extend the tape if necessary
+    if (tape.length <= position) {
+      tape.add(0);
+      _tape.sink.add(tape);
     }
+    
+    await Future.delayed(Duration(milliseconds: delay.value.toInt()));
+    _position.sink.add(position);
+    
     if (debug) {
-      print('Going right to $position');
+      _logger.fine('Going right to $position');
     }
   }
 
-  Future printValue() async {
+  Future<void> printValue() async {
     output.add(String.fromCharCode(tape[position]));
     _output.sink.add(output);
 
     if (debug) {
-      print('Printing ${tape[position]} at $position');
+      _logger.fine('Printing ${tape[position]} at $position');
     }
   }
 
@@ -167,8 +197,10 @@ class MainBloc {
     var openBrackets = 1;
     if (tape[position] > 0) {
       bracketStack.add(codePointer);
+      _logger.fine('Adding bracket at position $codePointer to stack');
     } else {
-      while (openBrackets > 0) {
+      _logger.fine('Skipping loop at position $codePointer');
+      while (openBrackets > 0 && ++codePointer < code.length) {
         if (code[codePointer] == ']') {
           openBrackets--;
         } else if (code[codePointer] == '[') {
@@ -179,19 +211,32 @@ class MainBloc {
   }
 
   void rightBracket() {
+    if (bracketStack.isEmpty) {
+      _logger.warning('Unmatched closing bracket at position $codePointer');
+      return; // Skip this bracket if there's no matching opening bracket
+    }
     codePointer = bracketStack.removeLast() - 1;
+    _logger.fine('Jumping back to position ${codePointer + 1}');
   }
 
   Future<String> run(String code) async {
+    _logger.info('Starting BrainDart execution');
     _reset();
     this.code =
         code.replaceAll(RegExp(r"[\dA-Za-z\r\n/# '()\\]"), '').trim().split('');
+    
+    // Check if code is empty after filtering
+    if (this.code.isEmpty) {
+      _logger.warning('No valid BrainF code to run');
+      return '';
+    }
+    
     var list = <String>['+', '-', '<', '>', '.', ',', '[', ']'];
     do {
       var c = this.code[codePointer];
       if (list.contains(c)) {
         if (debug) {
-          print('Operation: $c');
+          _logger.fine('Operation: $c');
         }
         await operation(c);
       }
@@ -200,11 +245,15 @@ class MainBloc {
     var result = output.join('');
     if (!_isStopped.value) {
       _reset();
+      _logger.info('Execution completed successfully');
+    } else {
+      _logger.info('Execution stopped by user');
     }
     return result;
   }
 
   void stop() {
+    _logger.info('Stopping execution');
     _isStopped.add(true);
   }
 
@@ -213,10 +262,23 @@ class MainBloc {
     input = [];
     position = 0;
     codePointer = 0;
-    tape = [];
+    tape = [0];  // Initialize with a 0 to match constructor
     bracketStack = [];
     output = [];
     _isStopped.add(false);
+    _tape.sink.add(tape);  // Update the tape subject
+    _position.sink.add(position);  // Update the position subject
+    _logger.fine('Reset all variables to initial state');
+  }
+
+  // Add dispose method to clean up resources
+  void dispose() {
+    _logger.info('Disposing resources');
+    _position.close();
+    _tape.close();
+    _output.close();
+    delay.close();
+    _isStopped.close();
   }
 }
 
