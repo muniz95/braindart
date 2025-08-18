@@ -12,7 +12,6 @@ window.onload = function() {
 // This mimics a MultiChannel-formatted message.
 var sendLoadException = function(message) {
   window.parent.postMessage({
-    "href": window.location.href,
     "data": [0, {"type": "loadException", "message": message}],
     "exception": true,
   }, window.location.origin);
@@ -52,13 +51,27 @@ if (link.href == '') {
 
 var script = document.createElement('script');
 
-script.src = link.href + '.browser_test.dart.js';
+if (typeof trustedTypes !== 'undefined') {
+  const sanitizer = trustedTypes.createPolicy('dart#test', {
+    createScriptURL: (input) => input + '.browser_test.dart.js'
+  });
+  script.src = sanitizer.createScriptURL(link.href);
+} else {
+  script.src = link.href + '.browser_test.dart.js';
+}
 
 script.onerror = function(event) {
   var message = "Failed to load script at " + script.src +
       (event.message ? ": " + event.message : ".");
   sendLoadException(message);
-}
+};
+
+Array.from(document.querySelectorAll('script')).some(currentScript => {
+  if (currentScript.nonce) {
+    script.nonce = currentScript.nonce;
+    return true;
+  }
+});
 
 var parent = link.parentNode;
 document.currentScript = script;

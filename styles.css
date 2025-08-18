@@ -46,6 +46,14 @@ button::after {
   background-color: green;
 }
 
+#pause {
+  background-color: orange;
+}
+
+#resume {
+  background-color: blue;
+}
+
 #stop {
   background-color: red;
 }
