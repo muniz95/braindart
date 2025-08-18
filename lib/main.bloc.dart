@@ -20,12 +20,14 @@ class MainBloc {
   late final BehaviorSubject<List<String>> _output;
   late final BehaviorSubject<double> delay;
   late final BehaviorSubject<bool> _isStopped;
+  late final BehaviorSubject<bool> _isPaused;
 
   // Stream getters
   Stream<int> get positionStream => _position.stream;
   Stream<List<int>> get tapeStream => _tape.stream;
   Stream<List<String>> get composingOutput => _output.stream;
   Stream<bool> get isStopped => _isStopped.stream;
+  Stream<bool> get isPaused => _isPaused.stream;
 
   MainBloc({this.debug = true, double delayValue = 100}) {
     // Initialize logging
@@ -43,11 +45,15 @@ class MainBloc {
     _position = BehaviorSubject<int>.seeded(0);
     _tape = BehaviorSubject<List<int>>.seeded([0]);
     _output = BehaviorSubject<List<String>>.seeded([]);
+    _isPaused = BehaviorSubject<bool>.seeded(false);
     _reset();
 
     if (debug) {
       delay.listen((event) {
         _logger.fine('Delay changed to: $event');
+      });
+      _isPaused.listen((event) {
+        _logger.fine('Pause state changed to: $event');
       });
     }
   }
@@ -233,6 +239,12 @@ class MainBloc {
     
     var list = <String>['+', '-', '<', '>', '.', ',', '[', ']'];
     do {
+      // Add pause check here
+      while (_isPaused.value) {
+        await Future.delayed(Duration(milliseconds: 100));
+        if (_isStopped.value) break; // Check if stopped during pause
+      }
+      
       var c = this.code[codePointer];
       if (list.contains(c)) {
         if (debug) {
@@ -252,8 +264,19 @@ class MainBloc {
     return result;
   }
 
+  void pause() {
+    _logger.info('Pausing execution');
+    _isPaused.add(true);
+  }
+
+  void resume() {
+    _logger.info('Resuming execution');
+    _isPaused.add(false);
+  }
+
   void stop() {
     _logger.info('Stopping execution');
+    _isPaused.add(false); // Reset pause state when stopping
     _isStopped.add(true);
   }
 
@@ -266,6 +289,7 @@ class MainBloc {
     bracketStack = [];
     output = [];
     _isStopped.add(false);
+    _isPaused.add(false);  // Reset pause state
     _tape.sink.add(tape);  // Update the tape subject
     _position.sink.add(position);  // Update the position subject
     _logger.fine('Reset all variables to initial state');
@@ -279,6 +303,7 @@ class MainBloc {
     _output.close();
     delay.close();
     _isStopped.close();
+    _isPaused.close();
   }
 }
 
