@@ -2,26 +2,34 @@ import 'dart:html';
 
 import 'package:brainfuck/main.bloc.dart';
 
-double SPEED_RATIO = 100000;
+const double speedRatio = 100000;
 
-TextAreaElement codeTextarea = TextAreaElement();
-ButtonElement playButton = ButtonElement();
-ButtonElement stopButton = ButtonElement();
-InputElement speedSlider = InputElement();
-DivElement outputDiv = DivElement();
-MainBloc bloc = MainBloc();
+late TextAreaElement codeTextarea;
+late ButtonElement playButton;
+late ButtonElement stopButton;
+late InputElement speedSlider;
+late DivElement outputDiv;
+late MainBloc bloc;
 
 void main() {
   init();
 
   playButton.addEventListener('click', (Event e) {
     outputDiv.text = '';
-    bloc.run(codeTextarea.value!);
+    final code = codeTextarea.value;
+    if (code != null) {
+      bloc.run(code);
+    }
   });
+  
   speedSlider.addEventListener('change', (Event event) {
-    var speed = SPEED_RATIO / int.parse((event.target as InputElement).value!);
-    bloc.delay.sink.add(speed);
+    final target = event.target;
+    if (target is InputElement && target.value != null) {
+      var speed = speedRatio / int.parse(target.value as String);
+      bloc.delay.sink.add(speed);
+    }
   });
+  
   stopButton.addEventListener('click', (event) {
     bloc.stop();
   });
@@ -29,21 +37,32 @@ void main() {
 
 void init() {
   bloc = MainBloc();
+  
   codeTextarea = querySelector('#code') as TextAreaElement;
   playButton = querySelector('#play') as ButtonElement;
   stopButton = querySelector('#stop') as ButtonElement;
   speedSlider = querySelector('#speed') as InputElement;
   outputDiv = querySelector('#output') as DivElement;
+  
   codeTextarea.value = BF_HELLO_WORLD;
+  
   bloc.composingOutput.listen((List<String> output) {
     outputDiv.text = output.join('');
   });
+  
   bloc.tapeStream.listen((List<int> tape) {
-    document.getElementById('tape')?.remove();
+    final tapeElement = document.getElementById('tape');
+    if (tapeElement != null) {
+      tapeElement.remove();
+    }
     _buildTape(tape);
   });
+  
   bloc.positionStream.listen((int position) {
-    document.getElementById('tape')?.remove();
+    final tapeElement = document.getElementById('tape');
+    if (tapeElement != null) {
+      tapeElement.remove();
+    }
     _buildTape(bloc.tape);
   });
 }

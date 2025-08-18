@@ -8,21 +8,23 @@ class MainBloc {
   late List<int> bracketStack;
   late List<String> input;
   late List<String> output;
-  late bool debug;
-  late BehaviorSubject<int> _position;
-  late BehaviorSubject<List<int>> _tape;
-  late BehaviorSubject<List<String>> _output;
-  late BehaviorSubject<double> delay;
-  late BehaviorSubject<bool> _isStopped;
+  final bool debug;
 
+  // Use late final for subjects
+  late final BehaviorSubject<int> _position;
+  late final BehaviorSubject<List<int>> _tape;
+  late final BehaviorSubject<List<String>> _output;
+  late final BehaviorSubject<double> delay;
+  late final BehaviorSubject<bool> _isStopped;
+
+  // Stream getters
   Stream<int> get positionStream => _position.stream;
   Stream<List<int>> get tapeStream => _tape.stream;
   Stream<List<String>> get composingOutput => _output.stream;
   Stream<bool> get isStopped => _isStopped.stream;
 
-  MainBloc({bool debug = true, double delay = 100}) {
-    this.debug = debug;
-    this.delay = BehaviorSubject<double>.seeded(delay);
+  MainBloc({this.debug = true, double delayValue = 100}) {
+    delay = BehaviorSubject<double>.seeded(delayValue);
     _isStopped = BehaviorSubject<bool>.seeded(false);
     _position = BehaviorSubject<int>.seeded(0);
     _tape = BehaviorSubject<List<int>>.seeded([0]);
@@ -30,8 +32,8 @@ class MainBloc {
     _reset();
 
     if (debug) {
-      this.delay.listen((event) {
-        print(event);
+      delay.listen((event) {
+        print('Delay changed to: $event');
       });
     }
   }
@@ -217,6 +219,15 @@ class MainBloc {
     bracketStack = [];
     output = [];
     _isStopped.add(false);
+  }
+
+  // Add dispose method to clean up resources
+  void dispose() {
+    _position.close();
+    _tape.close();
+    _output.close();
+    delay.close();
+    _isStopped.close();
   }
 }
 
