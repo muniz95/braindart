@@ -7,6 +7,8 @@ const double speedRatio = 100000;
 
 late TextAreaElement codeTextarea;
 late ButtonElement playButton;
+late ButtonElement pauseButton;
+late ButtonElement resumeButton;
 late ButtonElement stopButton;
 late InputElement speedSlider;
 late DivElement outputDiv;
@@ -24,8 +26,24 @@ void main() {
     outputDiv.text = '';
     final code = codeTextarea.value;
     if (code != null) {
+      // Enable pause button when starting execution
+      pauseButton.disabled = false;
+      resumeButton.disabled = true;
+      playButton.disabled = true;
       bloc.run(code);
     }
+  });
+  
+  pauseButton.addEventListener('click', (Event e) {
+    pauseButton.disabled = true;
+    resumeButton.disabled = false;
+    bloc.pause();
+  });
+  
+  resumeButton.addEventListener('click', (Event e) {
+    pauseButton.disabled = false;
+    resumeButton.disabled = true;
+    bloc.resume();
   });
   
   speedSlider.addEventListener('change', (Event event) {
@@ -37,6 +55,10 @@ void main() {
   });
   
   stopButton.addEventListener('click', (event) {
+    // Reset all button states when stopping
+    playButton.disabled = false;
+    pauseButton.disabled = false;
+    resumeButton.disabled = true;
     bloc.stop();
   });
 }
@@ -46,11 +68,16 @@ void init() {
   
   codeTextarea = querySelector('#code') as TextAreaElement;
   playButton = querySelector('#play') as ButtonElement;
+  pauseButton = querySelector('#pause') as ButtonElement;
+  resumeButton = querySelector('#resume') as ButtonElement;
   stopButton = querySelector('#stop') as ButtonElement;
   speedSlider = querySelector('#speed') as InputElement;
   outputDiv = querySelector('#output') as DivElement;
   
   codeTextarea.value = BF_HELLO_WORLD;
+  
+  // Initially disable resume button
+  resumeButton.disabled = true;
   
   bloc.composingOutput.listen((List<String> output) {
     outputDiv.text = output.join('');
@@ -70,6 +97,15 @@ void init() {
       tapeElement.remove();
     }
     _buildTape(bloc.tape);
+  });
+  
+  // Listen for completion of execution to reset button states
+  bloc.isStopped.listen((bool isStopped) {
+    if (isStopped) {
+      playButton.disabled = false;
+      pauseButton.disabled = false;
+      resumeButton.disabled = true;
+    }
   });
 }
 
