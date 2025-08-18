@@ -110,11 +110,21 @@ void init() {
 }
 
 void _buildTape(List<int> tape) {
+  // Get the tape container from our new HTML structure
+  final tapeContainer = querySelector('.tape-visualizer');
+  if (tapeContainer == null) return;
+  
+  // Create the tape element
   var tapeDiv = DivElement()..id = 'tape';
+  
+  // Create cells
   tape.asMap().forEach((int index, int value) {
     tapeDiv.append(_buildCell(value, index == bloc.position));
   });
-  document.body?.append(tapeDiv);
+  
+  // Clear any existing tape and add the new one
+  tapeContainer.children.clear();
+  tapeContainer.append(tapeDiv);
 }
 
 DivElement _buildCell(int value, bool isActive) {
@@ -122,8 +132,12 @@ DivElement _buildCell(int value, bool isActive) {
   if (isActive) {
     classes.add('active');
   }
+  
+  // Add cell index as data attribute for better visualization
   var cell = DivElement()
     ..innerText = value.toString()
-    ..classes = classes;
+    ..classes = classes
+    ..attributes['data-index'] = bloc.position.toString();
+    
   return cell;
 }

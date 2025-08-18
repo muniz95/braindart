@@ -1,88 +1,325 @@
-@import url(https://fonts.googleapis.com/css?family=Roboto);
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap');
+
+:root {
+  /* Color Variables */
+  --primary-color: #2962ff;
+  --primary-dark: #0039cb;
+  --primary-light: #768fff;
+  --accent-color: #ff6d00;
+  --success-color: #00c853;
+  --warning-color: #ffc400;
+  --error-color: #d50000;
+  --bg-color: #f5f5f5;
+  --card-bg: #ffffff;
+  --editor-bg: #2d2d2d;
+  --editor-text: #f8f8f2;
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --border-color: #e0e0e0;
+  
+  /* Spacing Variables */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  
+  /* Border Radius */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 16px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 20px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.1);
+  
+  /* Transition */
+  --transition-speed: 0.3s;
+}
+
+/* Reset & Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 html, body {
   width: 100%;
   height: 100%;
-  margin: 0;
-  padding: 0;
   font-family: 'Roboto', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-size: 16px;
 }
 
-textarea {
-  border-style: none;
-  background-color: darkgray;
-  color: white;
-  width: 100%;
-  font-size: 20px;
-  overflow: hidden;
+/* Layout */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-md);
 }
 
-button {
-  width: 50px;
-  height: 50px;
-  border-style: none;
-  border-radius: 50%;
-  color: white;
+.app-header {
+  text-align: center;
+  margin-bottom: var(--space-lg);
+  padding: var(--space-lg) 0;
 }
 
-button::after {
+.app-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-xs);
+  color: var(--primary-color);
+}
+
+.app-description {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* Editor Container */
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-md);
+}
+
+@media (min-width: 768px) {
+  .editor-container {
+    flex-direction: row;
+  }
+}
+
+.code-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-label {
+  font-weight: 500;
+  margin-bottom: var(--space-sm);
+  color: var(--text-primary);
+}
+
+textarea#code {
+  font-family: 'Fira Code', monospace;
+  background-color: var(--editor-bg);
+  color: var(--editor-text);
+  border-radius: var(--border-radius-sm);
   border: none;
+  padding: var(--space-md);
+  min-height: 200px;
+  width: 100%;
+  font-size: 1rem;
+  line-height: 1.5;
+  resize: vertical;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+  transition: all var(--transition-speed);
 }
 
-#container {
+textarea#code:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+/* Controls Panel */
+.controls-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  min-width: 120px;
+}
+
+@media (min-width: 768px) {
+  .controls-panel {
+    padding-left: var(--space-md);
+    border-left: 1px solid var(--border-color);
+  }
+}
+
+.control-buttons {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+  .control-buttons {
+    flex-direction: column;
+  }
+}
+
+.control-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
-  margin-top: 40px;
+  transition: all var(--transition-speed);
+  box-shadow: var(--shadow-sm);
+  color: white;
 }
 
-#output {
-  padding: 20px;
-  text-align: center;
+.control-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 #play {
-  background-color: green;
+  background-color: var(--success-color);
 }
 
 #pause {
-  background-color: orange;
+  background-color: var(--warning-color);
 }
 
 #resume {
-  background-color: blue;
+  background-color: var(--primary-color);
 }
 
 #stop {
-  background-color: red;
+  background-color: var(--error-color);
+}
+
+/* Speed Control */
+.speed-control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.speed-control label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.speed-slider-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: var(--border-color);
+  border-radius: 5px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Output Section */
+.output-section {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.output-label {
+  font-weight: 500;
+  margin-bottom: var(--space-sm);
+  color: var(--text-primary);
+}
+
+.output-content {
+  min-height: 60px;
+  padding: var(--space-md);
+  background-color: var(--bg-color);
+  border-radius: var(--border-radius-sm);
+  font-family: 'Fira Code', monospace;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+/* Tape Visualizer */
+.tape-visualizer {
+  overflow-x: auto;
+  padding: var(--space-sm) 0;
+  margin: 0 -var(--space-md);
 }
 
 #tape {
-  display: flex;
-  align-items: flex-start;
-  /* width: 100%; */
-  margin-left: 20px;
-}
-
-.buttons-row {
-  flex-direction: column;
-  margin-left: 10px;
-  display: flex;
-  justify-content: space-evenly;
+  display: inline-flex;
+  padding: 0 var(--space-md);
 }
 
 .cell {
-  width: 30px;
+  width: 40px;
   height: 40px;
-  border-style: solid;
+  border: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: 'Fira Code', monospace;
+  background-color: var(--card-bg);
+  margin: 0 2px;
+  transition: all var(--transition-speed);
 }
 
 .active {
   color: white;
-  background-color: green;
-  border-color: black;
+  background-color: var(--primary-color);
+  border-color: var(--primary-dark);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Footer */
+.app-footer {
+  text-align: center;
+  padding: var(--space-lg) 0 var(--space-sm);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-top: var(--space-xl);
+}
+
+/* Dark Mode Support (Media Query) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-primary: #e0e0e0;
+    --text-secondary: #aaaaaa;
+    --border-color: #333333;
+  }
 }
