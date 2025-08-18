@@ -1,4 +1,5 @@
 import 'package:rxdart/rxdart.dart';
+import 'package:logging/logging.dart';
 
 class MainBloc {
   late List<String> code;
@@ -9,6 +10,9 @@ class MainBloc {
   late List<String> input;
   late List<String> output;
   final bool debug;
+  
+  // Create a logger for this class
+  final Logger _logger = Logger('MainBloc');
 
   // Use late final for subjects
   late final BehaviorSubject<int> _position;
@@ -24,6 +28,16 @@ class MainBloc {
   Stream<bool> get isStopped => _isStopped.stream;
 
   MainBloc({this.debug = true, double delayValue = 100}) {
+    // Initialize logging
+    Logger.root.level = debug ? Level.ALL : Level.INFO;
+    Logger.root.onRecord.listen((record) {
+      // We'll use print here as the lowest level output mechanism
+      // In a real app, you might use a more sophisticated approach
+      if (debug || record.level >= Level.INFO) {
+        print('${record.level.name}: ${record.time}: ${record.message}');
+      }
+    });
+
     delay = BehaviorSubject<double>.seeded(delayValue);
     _isStopped = BehaviorSubject<bool>.seeded(false);
     _position = BehaviorSubject<int>.seeded(0);
@@ -33,12 +47,12 @@ class MainBloc {
 
     if (debug) {
       delay.listen((event) {
-        print('Delay changed to: $event');
+        _logger.fine('Delay changed to: $event');
       });
     }
   }
 
-  Future operation(str) async {
+  Future<void> operation(String str) async {
     switch (str) {
       case '+':
         {
@@ -82,7 +96,7 @@ class MainBloc {
           leftBracket();
 
           if (debug) {
-            print('Starting a loop');
+            _logger.fine('Starting a loop');
           }
           break;
         }
@@ -92,19 +106,20 @@ class MainBloc {
           rightBracket();
 
           if (debug) {
-            print('Ending a loop');
+            _logger.fine('Ending a loop');
           }
           break;
         }
 
       default:
         {
-          throw Exception('Invalid character');
+          _logger.severe('Invalid character: $str');
+          throw Exception('Invalid character: $str');
         }
     }
   }
 
-  Future add() async {
+  Future<void> add() async {
     try {
       tape[position] = tape[position];
     } catch (e) {
@@ -115,11 +130,11 @@ class MainBloc {
     await Future.delayed(Duration(milliseconds: delay.value.toInt()));
 
     if (debug) {
-      print('Incrementing > ${tape[position]} at $position');
+      _logger.fine('Incrementing > ${tape[position]} at $position');
     }
   }
 
-  Future subtract() async {
+  Future<void> subtract() async {
     try {
       tape[position] = tape[position];
     } catch (e) {
@@ -130,21 +145,21 @@ class MainBloc {
     --tape[position];
 
     if (debug) {
-      print('Decrementing > ${tape[position]} at $position');
+      _logger.fine('Decrementing > ${tape[position]} at $position');
     }
   }
 
-  Future shiftLeft() async {
+  Future<void> shiftLeft() async {
     position = --position < 0 ? 0 : position;
 
     await Future.delayed(Duration(milliseconds: delay.value.toInt()));
     _position.sink.add(position);
     if (debug) {
-      print('Going left to $position');
+      _logger.fine('Going left to $position');
     }
   }
 
-  Future shiftRight() async {
+  Future<void> shiftRight() async {
     position++;
 
     if (tape.length > position) {
@@ -152,16 +167,16 @@ class MainBloc {
       _position.sink.add(position);
     }
     if (debug) {
-      print('Going right to $position');
+      _logger.fine('Going right to $position');
     }
   }
 
-  Future printValue() async {
+  Future<void> printValue() async {
     output.add(String.fromCharCode(tape[position]));
     _output.sink.add(output);
 
     if (debug) {
-      print('Printing ${tape[position]} at $position');
+      _logger.fine('Printing ${tape[position]} at $position');
     }
   }
 
@@ -169,7 +184,9 @@ class MainBloc {
     var openBrackets = 1;
     if (tape[position] > 0) {
       bracketStack.add(codePointer);
+      _logger.fine('Adding bracket at position $codePointer to stack');
     } else {
+      _logger.fine('Skipping loop at position $codePointer');
       while (openBrackets > 0) {
         if (code[codePointer] == ']') {
           openBrackets--;
@@ -182,9 +199,11 @@ class MainBloc {
 
   void rightBracket() {
     codePointer = bracketStack.removeLast() - 1;
+    _logger.fine('Jumping back to position ${codePointer + 1}');
   }
 
   Future<String> run(String code) async {
+    _logger.info('Starting BrainDart execution');
     _reset();
     this.code =
         code.replaceAll(RegExp(r"[\dA-Za-z\r\n/# '()\\]"), '').trim().split('');
@@ -193,7 +212,7 @@ class MainBloc {
       var c = this.code[codePointer];
       if (list.contains(c)) {
         if (debug) {
-          print('Operation: $c');
+          _logger.fine('Operation: $c');
         }
         await operation(c);
       }
@@ -202,11 +221,15 @@ class MainBloc {
     var result = output.join('');
     if (!_isStopped.value) {
       _reset();
+      _logger.info('Execution completed successfully');
+    } else {
+      _logger.info('Execution stopped by user');
     }
     return result;
   }
 
   void stop() {
+    _logger.info('Stopping execution');
     _isStopped.add(true);
   }
 
@@ -219,10 +242,12 @@ class MainBloc {
     bracketStack = [];
     output = [];
     _isStopped.add(false);
+    _logger.fine('Reset all variables to initial state');
   }
 
   // Add dispose method to clean up resources
   void dispose() {
+    _logger.info('Disposing resources');
     _position.close();
     _tape.close();
     _output.close();

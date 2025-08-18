@@ -1,6 +1,7 @@
 import 'dart:html';
 
 import 'package:brainfuck/main.bloc.dart';
+import 'package:logging/logging.dart';
 
 const double speedRatio = 100000;
 
@@ -12,6 +13,11 @@ late DivElement outputDiv;
 late MainBloc bloc;
 
 void main() {
+  // Set up logging to also output to the browser console
+  Logger.root.onRecord.listen((LogRecord rec) {
+    window.console.log('${rec.level.name}: ${rec.message}');
+  });
+  
   init();
 
   playButton.addEventListener('click', (Event e) {
