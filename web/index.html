@@ -1,37 +1,75 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
 
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="scaffolded-by" content="https://github.com/google/stagehand">
-  <title>brainfuck</title>
+  <meta name="description" content="BrainDart - A modern Brainfuck interpreter">
+  <title>BrainDart</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="favicon.ico">
   <script defer src="main.dart.js"></script>
+  <!-- Add Google Material Symbols -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
 </head>
 
 <body>
+  <div class="app-container">
+    <header class="app-header">
+      <h1>BrainDart</h1>
+      <p class="app-description">A modern Brainfuck interpreter</p>
+    </header>
 
-  <div id="container">
+    <main class="content-area">
+      <div class="editor-container">
+        <div class="code-editor">
+          <div class="editor-label">Code Editor</div>
+          <textarea name="code" id="code" placeholder="Enter your Brainfuck code here..."></textarea>
+        </div>
+        
+        <div class="controls-panel">
+          <div class="control-buttons">
+            <button id="play" class="control-btn" title="Run Code">
+              <span class="material-symbols-rounded">play_arrow</span>
+            </button>
+            <button id="pause" class="control-btn" title="Pause Execution">
+              <span class="material-symbols-rounded">pause</span>
+            </button>
+            <button id="resume" class="control-btn" disabled title="Resume Execution">
+              <span class="material-symbols-rounded">play_arrow</span>
+            </button>
+            <button id="stop" class="control-btn" title="Stop Execution">
+              <span class="material-symbols-rounded">stop</span>
+            </button>
+          </div>
+          
+          <div class="speed-control">
+            <label for="speed">Execution Speed</label>
+            <div class="speed-slider-container">
+              <span class="material-symbols-rounded">slow_motion_video</span>
+              <input type="range" name="speed" id="speed" min="100" step="1" max="5000" value="500">
+              <span class="material-symbols-rounded">fast_forward</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <div style="display: flex">
-      <div>
-        <textarea name="code" id="code" cols="60" rows="15"></textarea>
+      <div class="output-section">
+        <div class="output-label">Output</div>
+        <div id="output" class="output-content">&nbsp;</div>
       </div>
-      <div class="buttons-row">
-        <button id="play">Play</button>
-        <button id="pause">Pause</button>
-        <button id="resume" disabled>Resume</button>
-        <button id="stop">Stop</button>
+
+      <div class="tape-visualizer">
+        <!-- Tape will be rendered here by JavaScript -->
       </div>
-    </div>
-    <input type="range" name="speed" id="speed" min="100" step="1" max="5000" defaultValue="500">
-    <div id="output">&nbsp;</div>
+    </main>
+
+    <footer class="app-footer">
+      <p>Created with 💙 using Dart</p>
+    </footer>
   </div>
-
 </body>
 
 </html>
